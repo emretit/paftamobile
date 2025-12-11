@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import '../../pages/service_requests_list_page.dart';
 import '../../pages/service_request_detail_page.dart';
+import '../../pages/service_request_edit_page.dart';
 import '../../pages/service_request_form_page.dart';
 import '../../pages/service_slip_form_page.dart';
 import '../../pages/service_slip_view_page.dart';
@@ -40,7 +41,7 @@ final List<RouteBase> serviceRoutes = [
     path: '/service/edit/:id',
     builder: (context, state) {
       final id = state.pathParameters['id']!;
-      return ServiceRequestFormPage(id: id);
+      return ServiceRequestEditPage(id: id);
     },
   ),
   

@@ -3,6 +3,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/accounting_provider.dart';
+import '../models/bank_account.dart';
+import '../models/expense.dart';
+import '../models/payment.dart';
 
 /// Finans Dashboard Sayfası
 /// Web app'teki Finance modülünün mobil versiyonu
@@ -30,9 +33,9 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final bankAccountsAsync = ref.watch(bankAccountsProvider);
-    final expensesAsync = ref.watch(expensesProvider);
-    final paymentsAsync = ref.watch(paymentsProvider);
+    final AsyncValue<List<BankAccount>> bankAccountsAsync = ref.watch(bankAccountsProvider);
+    final AsyncValue<List<Expense>> expensesAsync = ref.watch(expensesProvider);
+    final AsyncValue<List<Payment>> paymentsAsync = ref.watch(paymentsProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F7),
@@ -110,7 +113,7 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Toplam Bakiye Kartı
-            _buildTotalBalanceCard(context, bankAccountsAsync),
+            _buildTotalBalanceCard(context, bankAccountsAsync as AsyncValue<List<BankAccount>>),
             const SizedBox(height: 24),
 
             // İstatistikler
@@ -143,13 +146,13 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
     );
   }
 
-  Widget _buildTotalBalanceCard(BuildContext context, AsyncValue bankAccountsAsync) {
+  Widget _buildTotalBalanceCard(BuildContext context, AsyncValue<List<BankAccount>> bankAccountsAsync) {
     return bankAccountsAsync.when(
-      data: (accounts) {
-        final totalBalance = accounts.fold<double>(
-          0,
-          (sum, account) => sum + (account.balance ?? 0),
-        );
+      data: (List<BankAccount> accounts) {
+        double totalBalance = 0.0;
+        for (final account in accounts) {
+          totalBalance += account.currentBalance ?? 0.0;
+        }
 
         return Container(
           width: double.infinity,
@@ -258,10 +261,10 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
             Expanded(
               child: expensesAsync.when(
                 data: (expenses) {
-                  final thisMonthExpenses = expenses.where((e) {
+                  final thisMonthExpenses = expenses.where((Expense e) {
                     final now = DateTime.now();
                     return e.date.month == now.month && e.date.year == now.year;
-                  }).fold<double>(0, (sum, e) => sum + e.amount);
+                  }).fold<double>(0.0, (double sum, Expense e) => sum + e.amount);
                   return _buildStatCard(
                     'Bu Ay Gider',
                     '₺${_formatNumber(thisMonthExpenses)}',
@@ -281,28 +284,31 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
             Expanded(
               child: paymentsAsync.when(
                 data: (payments) {
-                  final pendingPayments = payments.where((p) => p.status == 'pending').length;
+                  // Payment modelinde status yok, paymentDirection kullanıyoruz
+                  // Gelen ödemeler için 'incoming', giden ödemeler için 'outgoing'
+                  final incomingPayments = payments.where((Payment p) => p.paymentDirection == 'incoming').length;
                   return _buildStatCard(
-                    'Bekleyen',
-                    '$pendingPayments',
-                    CupertinoIcons.clock_fill,
-                    const Color(0xFFFF9500),
+                    'Gelen',
+                    '$incomingPayments',
+                    CupertinoIcons.arrow_down_circle_fill,
+                    const Color(0xFF22C55E),
                   );
                 },
                 loading: () => _buildLoadingCard(),
-                error: (e, _) => _buildStatCard('Bekleyen', '-', CupertinoIcons.clock_fill, const Color(0xFFFF9500)),
+                error: (e, _) => _buildStatCard('Gelen', '-', CupertinoIcons.arrow_down_circle_fill, const Color(0xFF22C55E)),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: paymentsAsync.when(
                 data: (payments) {
-                  final completedPayments = payments.where((p) => p.status == 'completed').length;
+                  // Giden ödemeler
+                  final outgoingPayments = payments.where((Payment p) => p.paymentDirection == 'outgoing').length;
                   return _buildStatCard(
-                    'Tamamlanan',
-                    '$completedPayments',
-                    CupertinoIcons.checkmark_circle_fill,
-                    const Color(0xFF22C55E),
+                    'Giden',
+                    '$outgoingPayments',
+                    CupertinoIcons.arrow_up_circle_fill,
+                    const Color(0xFFEF4444),
                   );
                 },
                 loading: () => _buildLoadingCard(),
@@ -569,7 +575,7 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
                   ),
                 ),
                 Text(
-                  '₺${_formatNumber(account.balance ?? 0)}',
+                  '₺${_formatNumber(account.currentBalance ?? 0.0)}',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -662,7 +668,7 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    expense.category ?? '',
+                    expense.subcategory ?? expense.description ?? '',
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFF8E8E93),
@@ -675,7 +681,7 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '-₺${_formatNumber(expense.amount ?? 0)}',
+                  '-₺${_formatNumber(expense.amount)}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -799,7 +805,7 @@ class _FinancePageState extends ConsumerState<FinancePage> with SingleTickerProv
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '₺${_formatNumber(payment.amount ?? 0)}',
+                  '₺${_formatNumber(payment.amount)}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,

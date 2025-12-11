@@ -39,6 +39,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      // Kök dizin redirect - authentication durumuna göre yönlendirme
+      GoRoute(
+        path: '/',
+        redirect: (context, state) {
+          final isAuthenticated = authState.isAuthenticated;
+          return isAuthenticated ? '/dashboard' : '/login';
+        },
+      ),
+      
       // Public routes (authentication gerektirmeyen)
       ...publicRoutes,
       

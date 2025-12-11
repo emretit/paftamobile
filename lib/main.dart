@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -13,11 +14,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   try {
-    // Firebase'i başlat
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    print('Firebase başarıyla başlatıldı');
+    // Firebase'i başlat (Web platformunda atla çünkü yapılandırılmamış)
+    if (!kIsWeb) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      print('Firebase başarıyla başlatıldı');
+    } else {
+      print('Firebase henüz başlatılmamış, Firebase Messaging atlanıyor');
+    }
   } catch (e) {
     print('Firebase başlatma hatası: $e');
     // Firebase başlatılamadıysa uygulamayı durdurma, sadece log yaz
@@ -59,9 +64,11 @@ void main() async {
   }
   
   try {
-    // Firebase Messaging'i başlat
-    await FirebaseMessagingService.initialize();
-    print('Firebase Messaging başarıyla başlatıldı');
+    // Firebase Messaging'i başlat (Web'de atla)
+    if (!kIsWeb) {
+      await FirebaseMessagingService.initialize();
+      print('Firebase Messaging başarıyla başlatıldı');
+    }
   } catch (e) {
     print('Firebase Messaging başlatma hatası: $e');
   }
@@ -86,6 +93,7 @@ class MyApp extends ConsumerWidget {
       routerConfig: router,
       // Navigator key'i ekle (GoRouter bunu kullanır)
       restorationScopeId: 'app',
+      debugShowCheckedModeBanner: false, // DEBUG bandını kaldır
     );
   }
 

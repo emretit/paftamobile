@@ -11,12 +11,13 @@ class HrService {
     try {
       dynamic query = _supabase
           .from('employees')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => Employee.fromJson(json)).toList();
@@ -31,12 +32,13 @@ class HrService {
     try {
       dynamic query = _supabase
           .from('employee_leaves')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => EmployeeLeave.fromJson(json)).toList();
@@ -51,12 +53,13 @@ class HrService {
     try {
       dynamic query = _supabase
           .from('employee_performance')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => EmployeePerformance.fromJson(json)).toList();

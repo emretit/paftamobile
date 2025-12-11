@@ -6,10 +6,12 @@ import 'dart:typed_data';
 import '../providers/crm_provider.dart';
 import '../providers/sales_provider.dart';
 import '../providers/activity_provider.dart';
+import '../providers/pdf_template_provider.dart';
 import '../models/opportunity.dart';
 import '../models/proposal.dart';
 import '../models/order.dart';
 import '../models/activity.dart';
+import '../models/pdf_template.dart';
 import '../services/proposal_pdf_service.dart';
 import 'package:intl/intl.dart';
 
@@ -948,16 +950,8 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
                   ],
                 ),
                 const SizedBox(width: 8),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  minSize: 0,
-                  onPressed: () => _shareProposalPDF(proposal),
-                  child: const Icon(
-                    CupertinoIcons.doc_text,
-                    color: Color(0xFF8B2F2F),
-                    size: 20,
-                  ),
-                ),
+                // PDF Şablon Seçimi Dropdown
+                _buildPdfTemplateDropdown(proposal),
               ],
             ),
           ),
@@ -966,12 +960,138 @@ class _CrmPageState extends ConsumerState<CrmPage> with SingleTickerProviderStat
     );
   }
 
-  void _shareProposalPDF(Proposal proposal) async {
+  Widget _buildPdfTemplateDropdown(Proposal proposal) {
+    final templatesAsync = ref.watch(proposalPdfTemplatesProvider);
+    
+    return templatesAsync.when(
+      data: (templates) {
+        // Şablon yoksa veya tek şablon varsa direkt yazdır
+        if (templates.isEmpty) {
+          return CupertinoButton(
+            padding: EdgeInsets.zero,
+            minSize: 0,
+            onPressed: () => _shareProposalPDF(proposal, null),
+            child: const Icon(
+              CupertinoIcons.doc_text,
+              color: Color(0xFF8B2F2F),
+              size: 20,
+            ),
+          );
+        }
+        
+        // Şablonlar varsa dropdown butonu
+        return CupertinoButton(
+          padding: EdgeInsets.zero,
+          minSize: 0,
+          onPressed: () => _showTemplateSelector(proposal, templates),
+          child: const Icon(
+            CupertinoIcons.doc_text,
+            color: Color(0xFF8B2F2F),
+            size: 20,
+          ),
+        );
+      },
+      loading: () => const SizedBox(
+        width: 20,
+        height: 20,
+        child: CupertinoActivityIndicator(radius: 8),
+      ),
+      error: (error, stack) {
+        // Hata durumunda direkt yazdır
+        return CupertinoButton(
+          padding: EdgeInsets.zero,
+          minSize: 0,
+          onPressed: () => _shareProposalPDF(proposal, null),
+          child: const Icon(
+            CupertinoIcons.doc_text,
+            color: Color(0xFF8B2F2F),
+            size: 20,
+          ),
+        );
+      },
+    );
+  }
+
+  void _showTemplateSelector(Proposal proposal, List<PdfTemplate> templates) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: const Text(
+          'PDF Şablonu Seç',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          // Varsayılan şablon
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _shareProposalPDF(proposal, null);
+            },
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(CupertinoIcons.doc_text, size: 18, color: Color(0xFF8B2F2F)),
+                SizedBox(width: 8),
+                Text('Varsayılan Şablon'),
+              ],
+            ),
+          ),
+          // Diğer şablonlar
+          ...templates.map((template) {
+            return CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                _shareProposalPDF(proposal, template.id);
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    template.isDefault 
+                        ? CupertinoIcons.star_fill 
+                        : CupertinoIcons.doc_text,
+                    size: 18,
+                    color: template.isDefault 
+                        ? Colors.amber 
+                        : const Color(0xFF8B2F2F),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    template.name,
+                    style: TextStyle(
+                      fontWeight: template.isDefault 
+                          ? FontWeight.w600 
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('İptal'),
+        ),
+      ),
+    );
+  }
+
+  void _shareProposalPDF(Proposal proposal, String? templateId) async {
     try {
       final pdfService = ProposalPdfService();
       
-      // Web uygulamasındaki PDF renderer'ı kullan
-      final pdfBytes = await pdfService.generateProposalPdfFromWeb(proposal);
+      // Edge function ile PDF oluştur
+      final pdfBytes = await pdfService.generateProposalPdfFromWeb(
+        proposal,
+        templateId: templateId,
+      );
       
       final fileName = 'Teklif_${proposal.number}.pdf';
       

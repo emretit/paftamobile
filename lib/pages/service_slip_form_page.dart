@@ -58,7 +58,7 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
     super.dispose();
   }
 
-  void _initializeFormData(ServiceRequest serviceRequest) {
+  Future<void> _initializeFormData(ServiceRequest serviceRequest) async {
     if (_isInitialized) return;
     
     // Mevcut servis fişi varsa onun verilerini yükle
@@ -87,10 +87,45 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
         _problemDescriptionController.text = serviceDetails['problem_description']?.toString() ?? '';
         _servicePerformedController.text = serviceDetails['service_performed']?.toString() ?? '';
         _notesController.text = serviceDetails['notes']?.toString() ?? '';
-        
-        // Kullanılan ürünleri yükle
-        if (serviceDetails['used_products'] != null) {
-          _usedProducts = List<Map<String, dynamic>>.from(serviceDetails['used_products']);
+      }
+      
+      // Kullanılan ürünleri service_items tablosundan yükle
+      try {
+        final service = ref.read(serviceRequestServiceProvider);
+        final serviceItems = await service.getServiceItems(serviceRequest.id);
+        if (mounted) {
+          setState(() {
+            _usedProducts = serviceItems.map((item) {
+              return {
+                'id': item['id'],
+                'product_id': item['product_id'],
+                'name': item['name'] ?? '',
+                'description': item['description'],
+                'quantity': item['quantity'],
+                'unit': item['unit'] ?? 'adet',
+                'price': item['unit_price'] ?? item['total_price'] ?? 0,
+                'unit_price': item['unit_price'] ?? 0,
+                'total_price': item['total_price'] ?? 0,
+                'tax_rate': item['tax_rate'] ?? 20,
+                'discount_rate': item['discount_rate'] ?? 0,
+              };
+            }).toList();
+            _isInitialized = true;
+          });
+        }
+      } catch (e) {
+        print('Ürünler yüklenirken hata: $e');
+        // Fallback: Eski yöntem (serviceDetails içinden)
+        if (mounted) {
+          setState(() {
+            if (serviceRequest.serviceDetails != null) {
+              final serviceDetails = serviceRequest.serviceDetails!;
+              if (serviceDetails['used_products'] != null) {
+                _usedProducts = List<Map<String, dynamic>>.from(serviceDetails['used_products']);
+              }
+            }
+            _isInitialized = true;
+          });
         }
       }
     } else {
@@ -99,9 +134,8 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
       if (serviceRequest.location != null) {
         _customerAddressController.text = serviceRequest.location!;
       }
+      _isInitialized = true;
     }
-    
-    _isInitialized = true;
   }
 
   @override
@@ -132,8 +166,14 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
             );
           }
 
-          // Form verilerini başlat
-          _initializeFormData(serviceRequest);
+          // Form verilerini başlat - async olarak (await olmadan)
+          if (!_isInitialized) {
+            _initializeFormData(serviceRequest).then((_) {
+              // setState zaten metod içinde yapılıyor
+            }).catchError((e) {
+              print('Form verileri yüklenirken hata: $e');
+            });
+          }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -983,12 +1023,11 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
         'serial_number': _equipmentSerialController.text,
       };
 
-      // Servis detaylarını hazırla
+      // Servis detaylarını hazırla (used_products hariç - artık service_items tablosunda)
       final serviceDetails = {
         'problem_description': _problemDescriptionController.text,
         'service_performed': _servicePerformedController.text,
         'notes': _notesController.text,
-        'used_products': _usedProducts,
       };
 
       final serviceRequest = await ref.read(serviceRequestByIdProvider(widget.serviceRequestId).future);
@@ -1011,6 +1050,12 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
           equipmentData: equipmentData,
           serviceDetails: serviceDetails,
         );
+      }
+      
+      // Ürünleri service_items tablosuna kaydet
+      await service.deleteAllServiceItems(widget.serviceRequestId);
+      if (_usedProducts.isNotEmpty) {
+        await service.addServiceItems(widget.serviceRequestId, _usedProducts);
       }
 
       // Provider'ı yenile
@@ -1054,12 +1099,16 @@ class _ServiceSlipFormPageState extends ConsumerState<ServiceSlipFormPage> {
   void _addProduct(Map<String, dynamic> product, double quantity) {
     setState(() {
       _usedProducts.add({
-        'id': product['id'],
+        'id': product['id'], // product_id olarak kullanılacak
+        'product_id': product['id'], // service_items tablosuna kaydedilecek
         'name': product['name'],
         'description': product['description'],
         'unit': product['unit'] ?? 'adet',
         'quantity': quantity,
         'price': product['price'] ?? 0,
+        'unit_price': product['price'] ?? 0,
+        'tax_rate': 20, // Varsayılan KDV oranı
+        'discount_rate': 0,
       });
     });
   }

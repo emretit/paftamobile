@@ -11,12 +11,13 @@ class InventoryService {
     try {
       dynamic query = _supabase
           .from('products')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => Product.fromJson(json)).toList();
@@ -31,12 +32,13 @@ class InventoryService {
     try {
       dynamic query = _supabase
           .from('warehouses')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => Warehouse.fromJson(json)).toList();
@@ -51,12 +53,13 @@ class InventoryService {
     try {
       dynamic query = _supabase
           .from('inventory_transactions')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => InventoryTransaction.fromJson(json)).toList();

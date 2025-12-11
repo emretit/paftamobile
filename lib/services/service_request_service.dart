@@ -1,10 +1,12 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/service_request.dart';
 import 'push_notification_service.dart';
+import 'service_number_generator.dart';
 
 class ServiceRequestService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final PushNotificationService _pushNotificationService = PushNotificationService();
+  final ServiceNumberGenerator _numberGenerator = ServiceNumberGenerator(Supabase.instance.client);
 
   // Tüm servis taleplerini getir
   Future<List<ServiceRequest>> getServiceRequests({
@@ -42,9 +44,9 @@ class ServiceRequestService {
         if (customerId != null) {
           query = query.eq('customer_id', customerId);
         }
-        
+
         query = query.order('created_at', ascending: false);
-        
+
         if (limit != null) {
           query = query.limit(limit);
         }
@@ -77,12 +79,12 @@ class ServiceRequestService {
           .from('service_requests')
           .select('*')
           .eq('id', id);
-      
+
       // Company_id filtresi - güvenlik için zorunlu
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
-      
+
       final response = await query.single();
 
       return ServiceRequest.fromJson(response);
@@ -92,29 +94,117 @@ class ServiceRequestService {
     }
   }
 
-  // Yeni servis talebi oluştur
+  // Yeni servis talebi oluştur (retry mekanizması ile)
   Future<ServiceRequest> createServiceRequest(ServiceRequest serviceRequest) async {
-    try {
-      // Eğer created_by yoksa, mevcut kullanıcıyı ekle
-      final jsonData = serviceRequest.toJson();
-      if (jsonData['created_by'] == null) {
-        final currentUser = _supabase.auth.currentUser;
-        if (currentUser != null) {
-          jsonData['created_by'] = currentUser.id;
-        }
-      }
-      
-      final response = await _supabase
-          .from('service_requests')
-          .insert(jsonData)
-          .select()
-          .single();
-
-      return ServiceRequest.fromJson(response);
-    } catch (e) {
-      print('Service request oluşturma hatası: $e');
-      throw Exception('Servis talebi oluşturulamadı: $e');
+    int attempts = 0;
+    const maxAttempts = 5;
+    String? currentServiceNumber = serviceRequest.serviceNumber?.trim();
+    String? companyId; // companyId'yi dışarıda tut
+    
+    // Eğer kullanıcı numara girmediyse, otomatik üret
+    if (currentServiceNumber == null || currentServiceNumber.isEmpty) {
+      currentServiceNumber = null; // Kayıt anında üretilecek
     }
+
+    // Retry mekanizması ile kayıt yap
+    while (attempts < maxAttempts) {
+      try {
+        // Eğer created_by yoksa, mevcut kullanıcıyı ekle
+        final jsonData = serviceRequest.toJson();
+        final currentUser = _supabase.auth.currentUser;
+        
+        if (currentUser != null) {
+          // created_by set et
+          if (jsonData['created_by'] == null) {
+            jsonData['created_by'] = currentUser.id;
+          }
+          
+          // company_id'yi otomatik olarak set et (profiles tablosundan)
+          if (jsonData['company_id'] == null) {
+            try {
+              final profileResponse = await _supabase
+                  .from('profiles')
+                  .select('company_id')
+                  .eq('id', currentUser.id)
+                  .maybeSingle();
+              
+              if (profileResponse != null && profileResponse['company_id'] != null) {
+                jsonData['company_id'] = profileResponse['company_id'];
+              }
+            } catch (e) {
+              print('Company ID getirme hatası: $e');
+              // Hata durumunda devam et, Supabase trigger'ı set edebilir
+            }
+          }
+        }
+
+        // companyId'yi sakla (retry için gerekli)
+        companyId = jsonData['company_id'] as String?;
+        
+        // Servis numarasını otomatik oluştur (kayıt anında)
+        if (currentServiceNumber == null || currentServiceNumber.isEmpty) {
+          try {
+            currentServiceNumber = await _numberGenerator.generateServiceNumber(companyId);
+            jsonData['service_number'] = currentServiceNumber;
+          } catch (e) {
+            print('Servis numarası üretme hatası: $e');
+            // Fallback: timestamp kullan
+            final now = DateTime.now();
+            jsonData['service_number'] = 'SRV-${now.millisecondsSinceEpoch}';
+          }
+        } else {
+          // Kullanıcının girdiği numara kullanılıyor
+          jsonData['service_number'] = currentServiceNumber;
+        }
+        
+        final response = await _supabase
+            .from('service_requests')
+            .insert(jsonData)
+            .select()
+            .single();
+
+        return ServiceRequest.fromJson(response);
+        
+      } catch (e) {
+        // PostgreSQL unique constraint hatası (23505)
+        final errorString = e.toString();
+        final isUniqueConstraintError = errorString.contains('23505') || 
+                                       errorString.contains('duplicate key') ||
+                                       errorString.contains('unique constraint') ||
+                                       (errorString.contains('service_number') && 
+                                        errorString.contains('already exists'));
+        
+        if (isUniqueConstraintError && 
+            (currentServiceNumber == null || currentServiceNumber.isEmpty || attempts > 0)) {
+          attempts++;
+          
+          if (attempts >= maxAttempts) {
+            throw Exception('Servis numarası çakışması. Lütfen tekrar deneyin.');
+          }
+          
+          // Yeni numara üret (sadece otomatik üretilen numaralar için)
+          try {
+            currentServiceNumber = await _numberGenerator.generateServiceNumber(companyId);
+            print('🔄 Çakışma tespit edildi, yeni numara üretildi: $currentServiceNumber (Deneme: $attempts/$maxAttempts)');
+          } catch (genError) {
+            print('Yeni servis numarası üretme hatası: $genError');
+            // Fallback: timestamp kullan
+            final now = DateTime.now();
+            currentServiceNumber = 'SRV-${now.millisecondsSinceEpoch}';
+          }
+          
+          // Exponential backoff: 100ms, 200ms, 300ms, ...
+          await Future.delayed(Duration(milliseconds: 100 * attempts));
+          continue; // Tekrar dene
+        }
+        
+        // Diğer hatalar için direkt fırlat
+        print('Service request oluşturma hatası: $e');
+        throw Exception('Servis talebi oluşturulamadı: $e');
+      }
+    }
+    
+    throw Exception('Servis kaydı oluşturulamadı. Maksimum deneme sayısına ulaşıldı.');
   }
 
   // Servis talebi güncelle
@@ -192,12 +282,12 @@ class ServiceRequestService {
           .from('service_requests')
           .select('*')
           .or('service_title.ilike.%$searchQuery%,service_request_description.ilike.%$searchQuery%,service_location.ilike.%$searchQuery%');
-      
+
       // Company_id filtresi - güvenlik için zorunlu
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
-      
+
       query = query.order('created_at', ascending: false);
 
       final response = await query;
@@ -470,7 +560,7 @@ class ServiceRequestService {
       dynamic query = _supabase
           .from('service_requests')
           .select('service_status');
-      
+
       // Company_id filtresi - güvenlik için zorunlu
       if (companyId != null) {
         query = query.eq('company_id', companyId);
@@ -636,7 +726,20 @@ class ServiceRequestService {
   // Servis numarası oluştur  
   Future<ServiceRequest> generateServiceNumber(String serviceRequestId) async {
     try {
-      final serviceNumber = _generateServiceNumber();
+      // Mevcut servis talebinin company_id'sini al
+      String? finalCompanyId;
+      try {
+        final requestData = await _supabase
+            .from('service_requests')
+            .select('company_id')
+            .eq('id', serviceRequestId)
+            .maybeSingle();
+        finalCompanyId = requestData?['company_id'];
+      } catch (e) {
+        print('Company ID getirme hatası: $e');
+      }
+      
+      final serviceNumber = await _numberGenerator.generateServiceNumber(finalCompanyId);
       
       final response = await _supabase
           .from('service_requests')
@@ -662,13 +765,14 @@ class ServiceRequestService {
           .from('employees')
           .select('id, first_name, last_name, email, phone')
           .eq('is_technical', true)
-          .eq('status', 'aktif')
-          .order('first_name');
-      
+          .eq('status', 'aktif');
+
       // Company_id filtresi - güvenlik için zorunlu
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('first_name');
 
       final response = await query;
       return (response as List).cast<Map<String, dynamic>>();
@@ -691,15 +795,263 @@ class ServiceRequestService {
     return 'SF$year$month$day$hour$minute$second';
   }
 
-  // Benzersiz servis numarası oluştur
-  String _generateServiceNumber() {
-    final now = DateTime.now();
-    final year = now.year.toString();
-    final month = now.month.toString().padLeft(2, '0');
-    final day = now.day.toString().padLeft(2, '0');
-    final hour = now.hour.toString().padLeft(2, '0');
-    final minute = now.minute.toString().padLeft(2, '0');
-    
-    return 'SN$year$month$day$hour$minute';
+
+  // ========== SERVICE ITEMS (Ürünler) ==========
+
+  // Servis talebindeki ürünleri getir
+  Future<List<Map<String, dynamic>>> getServiceItems(String serviceRequestId) async {
+    try {
+      final response = await _supabase
+          .from('service_items')
+          .select('*')
+          .eq('service_request_id', serviceRequestId)
+          .order('sort_order', ascending: true)
+          .order('created_at', ascending: true);
+
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      print('Servis ürünleri getirme hatası: $e');
+      throw Exception('Servis ürünleri getirilemedi: $e');
+    }
+  }
+
+  // Servis talebine ürün ekle
+  Future<Map<String, dynamic>> addServiceItem(
+    String serviceRequestId, {
+    String? productId,
+    required String name,
+    String? description,
+    required double quantity,
+    required String unit,
+    required double unitPrice,
+    double? taxRate,
+    double? discountRate,
+    String? currency,
+    int? sortOrder,
+    String? companyId,
+  }) async {
+    try {
+      // company_id'yi otomatik olarak set et
+      String? finalCompanyId = companyId;
+      if (finalCompanyId == null) {
+        final currentUser = _supabase.auth.currentUser;
+        if (currentUser != null) {
+          try {
+            final profileResponse = await _supabase
+                .from('profiles')
+                .select('company_id')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+            
+            if (profileResponse != null && profileResponse['company_id'] != null) {
+              finalCompanyId = profileResponse['company_id'];
+            }
+          } catch (e) {
+            print('Company ID getirme hatası: $e');
+          }
+        }
+      }
+
+      // Toplam fiyatı hesapla
+      final subtotal = quantity * unitPrice;
+      final discountAmount = discountRate != null ? subtotal * (discountRate / 100) : 0;
+      final afterDiscount = subtotal - discountAmount;
+      final taxAmount = taxRate != null ? afterDiscount * (taxRate / 100) : 0;
+      final totalPrice = afterDiscount + taxAmount;
+
+      final itemData = {
+        'service_request_id': serviceRequestId,
+        'product_id': productId,
+        'name': name,
+        'description': description,
+        'quantity': quantity,
+        'unit': unit,
+        'unit_price': unitPrice,
+        'tax_rate': taxRate ?? 20,
+        'discount_rate': discountRate ?? 0,
+        'total_price': totalPrice,
+        'currency': currency ?? 'TRY',
+        'sort_order': sortOrder ?? 0,
+        'company_id': finalCompanyId,
+        'created_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      final response = await _supabase
+          .from('service_items')
+          .insert(itemData)
+          .select()
+          .single();
+
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      print('Servis ürünü ekleme hatası: $e');
+      throw Exception('Servis ürünü eklenemedi: $e');
+    }
+  }
+
+  // Servis talebindeki ürünü güncelle
+  Future<Map<String, dynamic>> updateServiceItem(
+    String itemId, {
+    String? productId,
+    String? name,
+    String? description,
+    double? quantity,
+    String? unit,
+    double? unitPrice,
+    double? taxRate,
+    double? discountRate,
+    String? currency,
+    int? sortOrder,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (productId != null) updateData['product_id'] = productId;
+      if (name != null) updateData['name'] = name;
+      if (description != null) updateData['description'] = description;
+      if (quantity != null) updateData['quantity'] = quantity;
+      if (unit != null) updateData['unit'] = unit;
+      if (unitPrice != null) updateData['unit_price'] = unitPrice;
+      if (taxRate != null) updateData['tax_rate'] = taxRate;
+      if (discountRate != null) updateData['discount_rate'] = discountRate;
+      if (currency != null) updateData['currency'] = currency;
+      if (sortOrder != null) updateData['sort_order'] = sortOrder;
+
+      // Eğer fiyat veya miktar değiştiyse toplam fiyatı yeniden hesapla
+      if (quantity != null || unitPrice != null || taxRate != null || discountRate != null) {
+        // Mevcut değerleri al
+        final currentItem = await _supabase
+            .from('service_items')
+            .select('quantity, unit_price, tax_rate, discount_rate')
+            .eq('id', itemId)
+            .single();
+
+        final finalQuantity = quantity ?? (currentItem['quantity'] as num).toDouble();
+        final finalUnitPrice = unitPrice ?? (currentItem['unit_price'] as num).toDouble();
+        final finalTaxRate = taxRate ?? (currentItem['tax_rate'] as num?)?.toDouble() ?? 20;
+        final finalDiscountRate = discountRate ?? (currentItem['discount_rate'] as num?)?.toDouble() ?? 0;
+
+        final subtotal = finalQuantity * finalUnitPrice;
+        final discountAmount = finalDiscountRate > 0 ? subtotal * (finalDiscountRate / 100) : 0;
+        final afterDiscount = subtotal - discountAmount;
+        final taxAmount = finalTaxRate > 0 ? afterDiscount * (finalTaxRate / 100) : 0;
+        final totalPrice = afterDiscount + taxAmount;
+
+        updateData['total_price'] = totalPrice;
+      }
+
+      final response = await _supabase
+          .from('service_items')
+          .update(updateData)
+          .eq('id', itemId)
+          .select()
+          .single();
+
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      print('Servis ürünü güncelleme hatası: $e');
+      throw Exception('Servis ürünü güncellenemedi: $e');
+    }
+  }
+
+  // Servis talebindeki ürünü sil
+  Future<void> deleteServiceItem(String itemId) async {
+    try {
+      await _supabase
+          .from('service_items')
+          .delete()
+          .eq('id', itemId);
+    } catch (e) {
+      print('Servis ürünü silme hatası: $e');
+      throw Exception('Servis ürünü silinemedi: $e');
+    }
+  }
+
+  // Servis talebindeki tüm ürünleri sil
+  Future<void> deleteAllServiceItems(String serviceRequestId) async {
+    try {
+      await _supabase
+          .from('service_items')
+          .delete()
+          .eq('service_request_id', serviceRequestId);
+    } catch (e) {
+      print('Servis ürünleri silme hatası: $e');
+      throw Exception('Servis ürünleri silinemedi: $e');
+    }
+  }
+
+  // Servis talebindeki ürünleri toplu ekle
+  Future<List<Map<String, dynamic>>> addServiceItems(
+    String serviceRequestId,
+    List<Map<String, dynamic>> items, {
+    String? companyId,
+  }) async {
+    try {
+      // company_id'yi otomatik olarak set et
+      String? finalCompanyId = companyId;
+      if (finalCompanyId == null) {
+        final currentUser = _supabase.auth.currentUser;
+        if (currentUser != null) {
+          try {
+            final profileResponse = await _supabase
+                .from('profiles')
+                .select('company_id')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+            
+            if (profileResponse != null && profileResponse['company_id'] != null) {
+              finalCompanyId = profileResponse['company_id'];
+            }
+          } catch (e) {
+            print('Company ID getirme hatası: $e');
+          }
+        }
+      }
+
+      final itemsToInsert = items.map((item) {
+        final quantity = (item['quantity'] as num?)?.toDouble() ?? 1.0;
+        final unitPrice = (item['price'] as num?)?.toDouble() ?? (item['unit_price'] as num?)?.toDouble() ?? 0.0;
+        final taxRate = (item['tax_rate'] as num?)?.toDouble() ?? 20.0;
+        final discountRate = (item['discount_rate'] as num?)?.toDouble() ?? 0.0;
+
+        // Toplam fiyatı hesapla
+        final subtotal = quantity * unitPrice;
+        final discountAmount = discountRate > 0 ? subtotal * (discountRate / 100) : 0;
+        final afterDiscount = subtotal - discountAmount;
+        final taxAmount = taxRate > 0 ? afterDiscount * (taxRate / 100) : 0;
+        final totalPrice = afterDiscount + taxAmount;
+
+        return {
+          'service_request_id': serviceRequestId,
+          'product_id': item['id'] ?? item['product_id'],
+          'name': item['name'] ?? '',
+          'description': item['description'],
+          'quantity': quantity,
+          'unit': item['unit'] ?? 'adet',
+          'unit_price': unitPrice,
+          'tax_rate': taxRate,
+          'discount_rate': discountRate,
+          'total_price': totalPrice,
+          'currency': item['currency'] ?? 'TRY',
+          'sort_order': item['sort_order'] ?? 0,
+          'company_id': finalCompanyId,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        };
+      }).toList();
+
+      final response = await _supabase
+          .from('service_items')
+          .insert(itemsToInsert)
+          .select();
+
+      return (response as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      print('Servis ürünleri toplu ekleme hatası: $e');
+      throw Exception('Servis ürünleri eklenemedi: $e');
+    }
   }
 }

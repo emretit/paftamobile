@@ -505,7 +505,7 @@ class ServiceSlipPdfService {
     );
   }
 
-  // Web uygulamasındaki PDF renderer'ı kullanarak PDF oluştur
+  // Edge function kullanarak PDF oluştur
   Future<Uint8List> generateServiceSlipPdfFromWeb(ServiceRequest serviceRequest) async {
     try {
       final supabase = Supabase.instance.client;
@@ -515,6 +515,8 @@ class ServiceSlipPdfService {
       if (session == null) {
         throw Exception('Kullanıcı oturumu bulunamadı');
       }
+
+      print('📄 Servis fişi PDF oluşturuluyor: ${serviceRequest.id}');
 
       // Call Edge Function
       final response = await supabase.functions.invoke(
@@ -527,24 +529,36 @@ class ServiceSlipPdfService {
         },
       );
 
-      if (response.status != 200) {
-        final errorData = response.data as Map<String, dynamic>?;
-        throw Exception(errorData?['error'] ?? 'PDF oluşturulamadı');
+      print('📄 Edge function yanıtı: status=${response.status}');
+
+      // Check for errors
+      if (response.data == null) {
+        throw Exception('PDF oluşturulamadı: Boş yanıt');
       }
 
       final responseData = response.data as Map<String, dynamic>;
+      
+      // Check if the response indicates an error
       if (responseData['success'] != true) {
-        throw Exception(responseData['error'] ?? 'PDF oluşturulamadı');
+        final errorMessage = responseData['error'] ?? 'PDF oluşturulamadı';
+        print('❌ PDF oluşturma hatası: $errorMessage');
+        throw Exception(errorMessage);
       }
 
       // Decode base64 PDF data
-      final pdfBase64 = responseData['pdfData'] as String;
+      final pdfBase64 = responseData['pdfData'] as String?;
+      if (pdfBase64 == null || pdfBase64.isEmpty) {
+        throw Exception('PDF verisi alınamadı');
+      }
+      
       final pdfBytes = base64Decode(pdfBase64);
+      print('✅ PDF başarıyla oluşturuldu: ${pdfBytes.length} bytes');
 
       return pdfBytes;
     } catch (e) {
-      print('Web PDF generation error: $e');
+      print('❌ Web PDF generation error: $e');
       // Fallback to local PDF generation
+      print('🔄 Yerel PDF oluşturucuya geçiliyor...');
       return await generateServiceSlipPdf(serviceRequest);
     }
   }

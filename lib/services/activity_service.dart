@@ -32,23 +32,23 @@ class ActivityService {
           .from('activities')
           .select('*')
           .eq('type', 'activity'); // Sadece 'activity' tipindeki kayıtları getir
-      
+
       // Employee ID varsa onu kullan
       if (employeeId != null) {
         query = query.eq('assignee_id', employeeId);
       } else {
         // Employee ID yoksa, assignee_id null olan aktiviteleri getir
         // (Kullanıcının employee kaydı yoksa, kendi oluşturduğu aktiviteleri görmek için)
-        query = query.is_('assignee_id', null);
+        query = query.isFilter('assignee_id', null);
       }
-      
-      query = query
-          .order('due_date', ascending: true)
-          .order('created_at', ascending: false);
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query
+          .order('due_date', ascending: true)
+          .order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => Activity.fromJson(json)).toList();

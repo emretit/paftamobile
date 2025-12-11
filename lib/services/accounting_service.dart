@@ -11,12 +11,13 @@ class AccountingService {
     try {
       dynamic query = _supabase
           .from('expenses')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => Expense.fromJson(json)).toList();
@@ -31,12 +32,13 @@ class AccountingService {
     try {
       dynamic query = _supabase
           .from('payments')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => Payment.fromJson(json)).toList();
@@ -51,12 +53,13 @@ class AccountingService {
     try {
       dynamic query = _supabase
           .from('bank_accounts')
-          .select('*')
-          .order('created_at', ascending: false);
+          .select('*');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => BankAccount.fromJson(json)).toList();

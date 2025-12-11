@@ -35,6 +35,12 @@ final proposalsProvider = FutureProvider<List<Proposal>>((ref) async {
   return await service.getProposals(companyId: companyId);
 });
 
+final proposalByIdProvider = FutureProvider.family<Proposal?, String>((ref, id) async {
+  final service = ref.read(salesServiceProvider);
+  final companyId = await _getCurrentUserCompanyId();
+  return await service.getProposalById(id, companyId: companyId);
+});
+
 final opportunitiesProvider = FutureProvider<List<Opportunity>>((ref) async {
   final service = ref.read(salesServiceProvider);
   final companyId = await _getCurrentUserCompanyId();

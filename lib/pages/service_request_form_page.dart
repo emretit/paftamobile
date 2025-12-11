@@ -10,9 +10,10 @@ import '../providers/inventory_provider.dart';
 import '../services/auth_service.dart';
 import '../models/employee.dart';
 import '../models/product.dart';
+import '../shared/widgets/service_form_widgets.dart';
 
 class ServiceRequestFormPage extends ConsumerStatefulWidget {
-  final String? id; // null ise yeni oluşturma, dolu ise düzenleme
+  final String? id;
 
   const ServiceRequestFormPage({
     super.key,
@@ -31,6 +32,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _slipNumberController = TextEditingController();
+  final _serviceNumberController = TextEditingController();
   
   // İletişim bilgileri
   final _contactPersonController = TextEditingController();
@@ -51,17 +53,14 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
   DateTime? _dueDate;
   TimeOfDay? _dueTime;
   DateTime _reportedDate = DateTime.now();
-  // Servis tarih bilgileri
   DateTime? _serviceStartDate;
   TimeOfDay? _serviceStartTime;
   DateTime? _serviceEndDate;
   TimeOfDay? _serviceEndTime;
   bool _isLoading = false;
   
-  // Kullanılan ürünler listesi
   List<Map<String, dynamic>> _usedProducts = [];
 
-  // Servis türleri
   final List<Map<String, String>> _serviceTypes = [
     {'value': 'bakım', 'label': 'Bakım'},
     {'value': 'onarım', 'label': 'Onarım'},
@@ -87,6 +86,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     _descriptionController.dispose();
     _locationController.dispose();
     _slipNumberController.dispose();
+    _serviceNumberController.dispose();
     _contactPersonController.dispose();
     _contactPhoneController.dispose();
     _contactEmailController.dispose();
@@ -103,6 +103,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         _descriptionController.text = serviceRequest.description ?? '';
         _locationController.text = serviceRequest.location ?? '';
         _slipNumberController.text = serviceRequest.slipNumber ?? '';
+        _serviceNumberController.text = serviceRequest.serviceNumber ?? '';
         _contactPersonController.text = serviceRequest.contactPerson ?? '';
         _contactPhoneController.text = serviceRequest.contactPhone ?? '';
         _contactEmailController.text = serviceRequest.contactEmail ?? '';
@@ -118,31 +119,53 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         _dueDate = serviceRequest.dueDate;
         _reportedDate = serviceRequest.reportedDate ?? DateTime.now();
         
-        // Saat bilgisini ayır
         if (serviceRequest.dueDate != null) {
           _dueTime = TimeOfDay.fromDateTime(serviceRequest.dueDate!);
         }
         
-        // Servis başlama tarihi ve saati
         _serviceStartDate = serviceRequest.serviceStartDate;
         if (serviceRequest.serviceStartDate != null) {
           _serviceStartTime = TimeOfDay.fromDateTime(serviceRequest.serviceStartDate!);
         }
         
-        // Servis bitirme tarihi ve saati
         _serviceEndDate = serviceRequest.serviceEndDate;
         if (serviceRequest.serviceEndDate != null) {
           _serviceEndTime = TimeOfDay.fromDateTime(serviceRequest.serviceEndDate!);
         }
-        
-        // Kullanılan ürünleri yükle (serviceDetails içinden)
-        if (serviceRequest.serviceDetails != null && 
-            serviceRequest.serviceDetails!['used_products'] != null) {
-          _usedProducts = List<Map<String, dynamic>>.from(
-            serviceRequest.serviceDetails!['used_products']
-          );
-        }
       });
+      
+      try {
+        final service = ref.read(serviceRequestServiceProvider);
+        final serviceItems = await service.getServiceItems(serviceRequest.id);
+        if (mounted) {
+          setState(() {
+            _usedProducts = serviceItems.map((item) {
+              return {
+                'id': item['id'],
+                'product_id': item['product_id'],
+                'name': item['name'] ?? '',
+                'description': item['description'],
+                'quantity': item['quantity'],
+                'unit': item['unit'] ?? 'adet',
+                'price': item['unit_price'] ?? item['total_price'] ?? 0,
+                'unit_price': item['unit_price'] ?? 0,
+                'total_price': item['total_price'] ?? 0,
+                'tax_rate': item['tax_rate'] ?? 20,
+                'discount_rate': item['discount_rate'] ?? 0,
+              };
+            }).toList();
+          });
+        }
+      } catch (e) {
+        if (mounted && serviceRequest.serviceDetails != null && 
+            serviceRequest.serviceDetails!['used_products'] != null) {
+          setState(() {
+            _usedProducts = List<Map<String, dynamic>>.from(
+              serviceRequest.serviceDetails!['used_products']
+            );
+          });
+        }
+      }
     }
   }
 
@@ -157,69 +180,49 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     final employeesAsync = ref.watch(employeesProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
-      appBar: AppBar(
-        title: Text(
-          widget.id == null ? 'Yeni Servis Talebi' : 'Servis Talebini Düzenle',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        backgroundColor: const Color(0xFFF2F2F7),
-        foregroundColor: const Color(0xFF000000),
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CupertinoActivityIndicator(
-                  color: Color(0xFFB73D3D),
-                ),
-              ),
-            ),
-        ],
-      ),
+      backgroundColor: ServiceFormStyles.backgroundColor,
+      appBar: _buildAppBar(),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Temel Bilgiler ve Tarih (Birleştirilmiş)
-              _buildBasicInfoCard(
+              // 1. Temel Bilgiler
+              _buildBasicInfoSection(
                 priorities,
                 priorityDisplayNames,
                 statuses,
                 statusDisplayNames,
                 techniciansAsync,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               
-              // 2. Müşteri, İletişim ve Talebi Alan (Birleştirilmiş)
-              _buildCustomerInfoCard(customersAsync, employeesAsync),
-              const SizedBox(height: 12),
+              // 2. Müşteri ve İletişim
+              _buildCustomerSection(customersAsync, employeesAsync),
+              const SizedBox(height: 16),
               
-              // 3. Tarih Bilgileri (Kompakt)
-              _buildDateInfoCard(),
-              const SizedBox(height: 12),
+              // 3. Tarih Bilgileri
+              _buildDateSection(),
+              const SizedBox(height: 16),
               
-              // 4. Servis Sonucu ve Notlar (Birleştirilmiş)
-              _buildNotesCard(),
-              const SizedBox(height: 12),
+              // 4. Notlar ve Sonuç
+              _buildNotesSection(),
+              const SizedBox(height: 16),
               
               // 5. Kullanılan Ürünler
-              _buildUsedProductsCard(),
+              _buildProductsSection(),
               const SizedBox(height: 24),
               
               // Kaydet Butonu
-              _buildSaveButton(),
+              ServicePrimaryButton(
+                label: widget.id == null ? 'Servis Talebini Oluştur' : 'Değişiklikleri Kaydet',
+                icon: widget.id == null ? CupertinoIcons.add_circled : CupertinoIcons.checkmark_circle,
+                onPressed: _isLoading ? null : _saveServiceRequest,
+                isLoading: _isLoading,
+              ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -227,17 +230,221 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     );
   }
 
-  // Tarih Bilgileri Kartı (Kompakt)
-  Widget _buildDateInfoCard() {
-    return _buildSection(
-      'Tarih Bilgileri',
-      CupertinoIcons.calendar,
-      const Color(0xFF9B59B6),
-      [
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(CupertinoIcons.back),
+        onPressed: () {
+          if (Navigator.of(context).canPop()) {
+            context.pop();
+          } else {
+            context.go('/service/management');
+          }
+        },
+      ),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [ServiceFormStyles.primaryGradientStart, ServiceFormStyles.primaryGradientEnd],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              widget.id == null ? CupertinoIcons.add : CupertinoIcons.pencil,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            widget.id == null ? 'Yeni Servis Talebi' : 'Servis Talebini Düzenle',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: ServiceFormStyles.backgroundColor,
+      foregroundColor: ServiceFormStyles.textPrimary,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      actions: [
+        if (_isLoading)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CupertinoActivityIndicator(
+                color: ServiceFormStyles.primaryColor,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBasicInfoSection(
+    List<String> priorities,
+    Map<String, String> priorityDisplayNames,
+    List<String> statuses,
+    Map<String, String> statusDisplayNames,
+    AsyncValue<List<Map<String, dynamic>>> techniciansAsync,
+  ) {
+    return ServiceFormSection(
+      title: 'Temel Bilgiler',
+      icon: CupertinoIcons.doc_text,
+      iconColor: ServiceFormStyles.infoColor,
+      children: [
+        ServiceFormTextField(
+          controller: _titleController,
+          label: 'Servis Başlığı *',
+          hint: 'Örn: Klima bakımı, Elektrik arızası...',
+          icon: CupertinoIcons.textformat,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Başlık gereklidir';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 12),
+        
+        ServiceFormTextField(
+          controller: _descriptionController,
+          label: 'Servis Açıklaması *',
+          hint: 'Servisin detaylarını, yapılması gereken işlemleri açıklayın...',
+          icon: CupertinoIcons.text_alignleft,
+          maxLines: 3,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Açıklama gereklidir';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 12),
+        
+        Row(
+          children: [
+            Expanded(child: _buildServiceTypeDropdown()),
+            const SizedBox(width: 12),
+            Expanded(child: _buildPriorityDropdown(priorities, priorityDisplayNames)),
+          ],
+        ),
+        
+        if (widget.id != null) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _buildStatusDropdown(statuses, statusDisplayNames)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildTechnicianSelector(techniciansAsync)),
+            ],
+          ),
+        ] else ...[
+          const SizedBox(height: 12),
+          _buildTechnicianSelector(techniciansAsync),
+        ],
+        const SizedBox(height: 12),
+        
+        ServiceFormTextField(
+          controller: _serviceNumberController,
+          label: 'Servis No',
+          hint: 'Kayıt anında otomatik üretilecek',
+          icon: CupertinoIcons.number_square,
+        ),
+        const SizedBox(height: 12),
+        
         Row(
           children: [
             Expanded(
-              child: _buildDateSelector(
+              flex: 2,
+              child: ServiceFormTextField(
+                controller: _locationController,
+                label: 'Lokasyon',
+                hint: 'Servis yapılacak adres',
+                icon: CupertinoIcons.location,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ServiceFormTextField(
+                controller: _slipNumberController,
+                label: 'Fiş No',
+                hint: 'Opsiyonel',
+                icon: CupertinoIcons.number,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCustomerSection(AsyncValue<List<dynamic>> customersAsync, AsyncValue<List<Employee>> employeesAsync) {
+    return ServiceFormSection(
+      title: 'Müşteri ve İletişim',
+      icon: CupertinoIcons.person_2,
+      iconColor: ServiceFormStyles.successColor,
+      children: [
+        _buildCustomerSelector(customersAsync),
+        const SizedBox(height: 12),
+        
+        ServiceFormTextField(
+          controller: _contactPersonController,
+          label: 'İletişim Kişisi',
+          hint: 'Ad Soyad',
+          icon: CupertinoIcons.person,
+        ),
+        const SizedBox(height: 12),
+        
+        Row(
+          children: [
+            Expanded(
+              child: ServiceFormTextField(
+                controller: _contactPhoneController,
+                label: 'Telefon',
+                hint: '0(555) 123 45 67',
+                icon: CupertinoIcons.phone,
+                keyboardType: TextInputType.phone,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ServiceFormTextField(
+                controller: _contactEmailController,
+                label: 'E-posta',
+                hint: 'email@ornek.com',
+                icon: CupertinoIcons.mail,
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        
+        _buildReceivedBySelector(employeesAsync),
+      ],
+    );
+  }
+
+  Widget _buildDateSection() {
+    return ServiceFormSection(
+      title: 'Tarih Bilgileri',
+      icon: CupertinoIcons.calendar,
+      iconColor: ServiceFormStyles.purpleColor,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: ServiceFormDateSelector(
                 label: 'Bildirim Tarihi',
                 date: _reportedDate,
                 onTap: _selectReportedDate,
@@ -246,7 +453,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildDateSelector(
+              child: ServiceFormDateSelector(
                 label: 'Hedef Teslim',
                 date: _dueDate,
                 onTap: _selectDueDate,
@@ -258,18 +465,12 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         ),
         if (_dueDate != null) ...[
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTimeSelector(
-                  label: 'Teslim Saati',
-                  time: _dueTime,
-                  onTap: _selectDueTime,
-                  icon: CupertinoIcons.clock,
-                  enabled: true,
-                ),
-              ),
-            ],
+          ServiceFormTimeSelector(
+            label: 'Teslim Saati',
+            time: _dueTime,
+            onTap: _selectDueTime,
+            icon: CupertinoIcons.clock,
+            enabled: true,
           ),
         ],
         if (widget.id != null) ...[
@@ -277,7 +478,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           Row(
             children: [
               Expanded(
-                child: _buildDateSelector(
+                child: ServiceFormDateSelector(
                   label: 'Başlama',
                   date: _serviceStartDate,
                   onTap: _selectServiceStartDate,
@@ -287,7 +488,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildDateSelector(
+                child: ServiceFormDateSelector(
                   label: 'Bitirme',
                   date: _serviceEndDate,
                   onTap: _selectServiceEndDate,
@@ -302,94 +503,131 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     );
   }
 
-  // Müşteri/Tedarikçi, İletişim ve Talebi Alan (Birleştirilmiş)
-  Widget _buildCustomerInfoCard(AsyncValue<List<dynamic>> customersAsync, AsyncValue<List<Employee>> employeesAsync) {
-    return _buildSection(
-      'Müşteri ve İletişim',
-      CupertinoIcons.person_2,
-      const Color(0xFF27AE60),
-      [
-        // Müşteri Seçimi
-        _buildCustomerSelector(customersAsync),
-        const SizedBox(height: 12),
-        
-        // İletişim Kişisi
-        _buildTextField(
-          controller: _contactPersonController,
-          label: 'İletişim Kişisi',
-          hint: 'Ad Soyad',
-          icon: CupertinoIcons.person,
+  Widget _buildNotesSection() {
+    return ServiceFormSection(
+      title: 'Notlar ve Sonuç',
+      icon: CupertinoIcons.doc_plaintext,
+      iconColor: ServiceFormStyles.warningColor,
+      children: [
+        ServiceFormTextField(
+          controller: _serviceResultController,
+          label: 'Servis Sonucu',
+          hint: 'Servis sonucu veya ön görüş (opsiyonel)',
+          icon: CupertinoIcons.checkmark_seal,
+          maxLines: 2,
         ),
         const SizedBox(height: 12),
         
-        // Telefon ve E-posta
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                controller: _contactPhoneController,
-                label: 'Telefon',
-                hint: '0(555) 123 45 67',
-                icon: CupertinoIcons.phone,
-                keyboardType: TextInputType.phone,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTextField(
-                controller: _contactEmailController,
-                label: 'E-posta',
-                hint: 'email@ornek.com',
-                icon: CupertinoIcons.mail,
-                keyboardType: TextInputType.emailAddress,
-              ),
-            ),
-          ],
+        ServiceFormTextField(
+          controller: _notesController,
+          label: 'Şirket İçi Notlar',
+          hint: 'Her satır ayrı bir not olarak kaydedilir',
+          icon: CupertinoIcons.text_alignleft,
+          maxLines: 3,
         ),
-        const SizedBox(height: 12),
-        
-        // Talebi Alan Kişi
-        _buildReceivedBySelector(employeesAsync),
       ],
     );
   }
 
-  // Talebi Alan Kişi Seçici
-  Widget _buildReceivedBySelector(AsyncValue<List<Employee>> employeesAsync) {
-    return employeesAsync.when(
-      data: (employees) {
-        final items = [
-          {'value': '', 'label': 'Seçiniz (Opsiyonel)'},
-          ...employees.map((e) => {
-            'value': e.id as String,
-            'label': '${e.firstName} ${e.lastName}',
-          }),
-        ];
-
-        Employee? selectedEmployee;
-        if (_selectedReceivedBy != null) {
-          try {
-            selectedEmployee = employees.firstWhere(
-              (e) => e.id == _selectedReceivedBy,
-            );
-          } catch (e) {
-            selectedEmployee = null;
-          }
-        }
-
-        return GestureDetector(
-          onTap: () => _showEmployeePicker(employees),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2F2F7),
-              borderRadius: BorderRadius.circular(12),
+  Widget _buildProductsSection() {
+    return ServiceFormSection(
+      title: 'Kullanılan Ürünler',
+      icon: CupertinoIcons.cube_box,
+      iconColor: const Color(0xFF16A085),
+      trailing: CupertinoButton(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        color: ServiceFormStyles.primaryColor,
+        borderRadius: BorderRadius.circular(8),
+        minSize: 0,
+        onPressed: () => _showProductSelectionDialog(),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(CupertinoIcons.add, color: Colors.white, size: 16),
+            SizedBox(width: 4),
+            Text(
+              'Ürün Ekle',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            padding: const EdgeInsets.all(16),
-            child: Row(
+          ],
+        ),
+      ),
+      children: [
+        if (_usedProducts.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: ServiceFormStyles.inputBackground,
+              borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
+            ),
+            child: const Column(
               children: [
                 Icon(
-                  CupertinoIcons.person_badge_plus,
-                  color: const Color(0xFFB73D3D),
+                  CupertinoIcons.cube_box,
+                  size: 32,
+                  color: ServiceFormStyles.textSecondary,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Henüz ürün eklenmemiş',
+                  style: TextStyle(
+                    color: ServiceFormStyles.textSecondary,
+                    fontStyle: FontStyle.italic,
+                    fontSize: ServiceFormStyles.bodySize,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...(_usedProducts.asMap().entries.map((entry) {
+            final index = entry.key;
+            final product = entry.value;
+            return ServiceProductItem(
+              name: product['name'] ?? 'Bilinmeyen Ürün',
+              description: product['description'],
+              quantity: (product['quantity'] ?? 1).toDouble(),
+              unit: product['unit'] ?? 'adet',
+              price: (product['price'] ?? 0).toDouble(),
+              onDelete: () => _removeProduct(index),
+            );
+          }).toList()),
+      ],
+    );
+  }
+
+  Widget _buildCustomerSelector(AsyncValue<List<dynamic>> customersAsync) {
+    return customersAsync.when(
+      data: (customers) {
+        final selectedCustomer = _selectedCustomerId != null
+            ? customers.firstWhere(
+                (c) => c.id == _selectedCustomerId,
+                orElse: () => null,
+              )
+            : null;
+
+        return GestureDetector(
+          onTap: () => _showCustomerPicker(customers),
+          child: Container(
+            decoration: BoxDecoration(
+              color: ServiceFormStyles.inputBackground,
+              borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
+              border: Border.all(
+                color: Colors.grey.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                const Icon(
+                  CupertinoIcons.person_crop_circle,
+                  color: ServiceFormStyles.primaryColor,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -397,31 +635,32 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Talebi Alan Kişi',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF8E8E93),
-                          fontSize: 12,
+                      const Text(
+                        'Müşteri / Tedarikçi',
+                        style: TextStyle(
+                          fontSize: ServiceFormStyles.labelSize,
+                          color: ServiceFormStyles.textSecondary,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        selectedEmployee != null
-                            ? '${selectedEmployee.firstName} ${selectedEmployee.lastName}'
-                            : 'Talebi alan kişiyi seçin...',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: selectedEmployee != null
-                              ? const Color(0xFF000000)
-                              : const Color(0xFF8E8E93),
-                          fontSize: 16,
+                        selectedCustomer != null
+                            ? selectedCustomer.name ?? 'İsimsiz Müşteri'
+                            : 'Müşteri veya Tedarikçi seçin...',
+                        style: TextStyle(
+                          fontSize: ServiceFormStyles.bodySize,
+                          color: selectedCustomer != null
+                              ? ServiceFormStyles.textPrimary
+                              : ServiceFormStyles.textSecondary.withOpacity(0.7),
                         ),
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  CupertinoIcons.chevron_down,
-                  color: const Color(0xFF8E8E93),
+                const Icon(
+                  CupertinoIcons.chevron_right,
+                  color: ServiceFormStyles.textSecondary,
                   size: 16,
                 ),
               ],
@@ -431,21 +670,346 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
       },
       loading: () => Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(12),
+          color: ServiceFormStyles.inputBackground,
+          borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
         ),
         padding: const EdgeInsets.all(16),
-        child: const Center(
-          child: CupertinoActivityIndicator(),
-        ),
+        child: const Center(child: CupertinoActivityIndicator()),
       ),
       error: (error, stack) => Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(12),
+          color: ServiceFormStyles.inputBackground,
+          borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Text('Müşteriler yüklenemedi: $error'),
+      ),
+    );
+  }
+
+  Widget _buildTechnicianSelector(AsyncValue<List<Map<String, dynamic>>> techniciansAsync) {
+    return techniciansAsync.when(
+      data: (technicians) {
+        return ServiceFormDropdown<String>(
+          value: _selectedTechnicianId ?? '',
+          label: 'Teknisyen',
+          icon: CupertinoIcons.wrench,
+          items: [
+            const DropdownMenuItem<String>(
+              value: '',
+              child: Text('Atanmamış'),
+            ),
+            ...technicians.map((t) {
+              return DropdownMenuItem<String>(
+                value: t['id'] as String,
+                child: Text('${t['first_name']} ${t['last_name']}'),
+              );
+            }),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _selectedTechnicianId = value?.isEmpty == true ? null : value;
+            });
+          },
+        );
+      },
+      loading: () => Container(
+        decoration: BoxDecoration(
+          color: ServiceFormStyles.inputBackground,
+          borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(child: CupertinoActivityIndicator()),
+      ),
+      error: (error, stack) => Container(
+        decoration: BoxDecoration(
+          color: ServiceFormStyles.inputBackground,
+          borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Text('Teknisyenler yüklenemedi'),
+      ),
+    );
+  }
+
+  Widget _buildReceivedBySelector(AsyncValue<List<Employee>> employeesAsync) {
+    return employeesAsync.when(
+      data: (employees) {
+        Employee? selectedEmployee;
+        if (_selectedReceivedBy != null) {
+          try {
+            selectedEmployee = employees.firstWhere((e) => e.id == _selectedReceivedBy);
+          } catch (e) {
+            selectedEmployee = null;
+          }
+        }
+
+        return GestureDetector(
+          onTap: () => _showEmployeePicker(employees),
+          child: Container(
+            decoration: BoxDecoration(
+              color: ServiceFormStyles.inputBackground,
+              borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
+              border: Border.all(
+                color: Colors.grey.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                const Icon(
+                  CupertinoIcons.person_badge_plus,
+                  color: ServiceFormStyles.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Talebi Alan Kişi',
+                        style: TextStyle(
+                          fontSize: ServiceFormStyles.labelSize,
+                          color: ServiceFormStyles.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        selectedEmployee != null
+                            ? '${selectedEmployee.firstName} ${selectedEmployee.lastName}'
+                            : 'Talebi alan kişiyi seçin...',
+                        style: TextStyle(
+                          fontSize: ServiceFormStyles.bodySize,
+                          color: selectedEmployee != null
+                              ? ServiceFormStyles.textPrimary
+                              : ServiceFormStyles.textSecondary.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  CupertinoIcons.chevron_right,
+                  color: ServiceFormStyles.textSecondary,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => Container(
+        decoration: BoxDecoration(
+          color: ServiceFormStyles.inputBackground,
+          borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: const Center(child: CupertinoActivityIndicator()),
+      ),
+      error: (error, stack) => Container(
+        decoration: BoxDecoration(
+          color: ServiceFormStyles.inputBackground,
+          borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
         ),
         padding: const EdgeInsets.all(16),
         child: Text('Çalışanlar yüklenemedi: $error'),
+      ),
+    );
+  }
+
+  Widget _buildServiceTypeDropdown() {
+    return ServiceFormDropdown<String>(
+      value: _selectedServiceType.isEmpty ? null : _selectedServiceType,
+      label: 'Servis Türü',
+      icon: CupertinoIcons.tag,
+      hint: 'Servis türü seçin...',
+      items: _serviceTypes.map((type) {
+        return DropdownMenuItem(
+          value: type['value'],
+          child: Text(type['label']!),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedServiceType = value ?? '';
+        });
+      },
+    );
+  }
+
+  Widget _buildPriorityDropdown(List<String> priorities, Map<String, String> displayNames) {
+    final priorityColors = {
+      'low': ServiceFormStyles.successColor,
+      'medium': ServiceFormStyles.warningColor,
+      'high': const Color(0xFFE67E22),
+      'urgent': ServiceFormStyles.errorColor,
+    };
+
+    return ServiceFormDropdown<String>(
+      value: _selectedPriority,
+      label: 'Öncelik',
+      icon: CupertinoIcons.exclamationmark_triangle,
+      items: priorities.map((priority) {
+        return DropdownMenuItem(
+          value: priority,
+          child: Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: priorityColors[priority] ?? Colors.grey,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(displayNames[priority] ?? priority),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedPriority = value!;
+        });
+      },
+    );
+  }
+
+  Widget _buildStatusDropdown(List<String> statuses, Map<String, String> displayNames) {
+    return ServiceFormDropdown<String>(
+      value: _selectedStatus,
+      label: 'Durum',
+      icon: CupertinoIcons.checkmark_circle,
+      items: statuses.map((status) {
+        return DropdownMenuItem(
+          value: status,
+          child: Text(displayNames[status] ?? status),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedStatus = value!;
+        });
+      },
+    );
+  }
+
+  void _showCustomerPicker(List<dynamic> customers) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Müşteri Seç',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(CupertinoIcons.xmark_circle_fill),
+                      color: Colors.grey,
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: customers.length,
+                  itemBuilder: (context, index) {
+                    final customer = customers[index];
+                    final isSelected = customer.id == _selectedCustomerId;
+                    
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: isSelected
+                            ? ServiceFormStyles.primaryColor
+                            : ServiceFormStyles.inputBackground,
+                        child: Text(
+                          (customer.name ?? '?')[0].toUpperCase(),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : ServiceFormStyles.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        customer.name ?? 'İsimsiz Müşteri',
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                      subtitle: customer.email != null
+                          ? Text(
+                              customer.email!,
+                              style: const TextStyle(fontSize: 12),
+                            )
+                          : null,
+                      trailing: isSelected
+                          ? const Icon(
+                              CupertinoIcons.checkmark_circle_fill,
+                              color: ServiceFormStyles.primaryColor,
+                            )
+                          : null,
+                      onTap: () {
+                        setState(() {
+                          _selectedCustomerId = customer.id;
+                          _selectedSupplierId = null;
+                          
+                          if (customer.name != null) {
+                            _contactPersonController.text = customer.name!;
+                          }
+                          if (customer.phone != null) {
+                            _contactPhoneController.text = customer.phone!;
+                          }
+                          if (customer.email != null) {
+                            _contactEmailController.text = customer.email!;
+                          }
+                          if (customer.address != null) {
+                            _locationController.text = customer.address!;
+                          }
+                        });
+                        Navigator.pop(context);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -498,17 +1062,17 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
                     return ListTile(
                       leading: Icon(
                         CupertinoIcons.person_badge_plus,
-                        color: isSelected ? const Color(0xFFB73D3D) : Colors.grey,
+                        color: isSelected ? ServiceFormStyles.primaryColor : Colors.grey,
                       ),
                       title: const Text('Seçiniz (Opsiyonel)'),
                       trailing: isSelected
                           ? const Icon(
                               CupertinoIcons.checkmark_circle_fill,
-                              color: Color(0xFFB73D3D),
+                              color: ServiceFormStyles.primaryColor,
                             )
                           : null,
                       onTap: () {
-                            setState(() {
+                        setState(() {
                           _selectedReceivedBy = null;
                         });
                         Navigator.pop(context);
@@ -521,7 +1085,7 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
                   return ListTile(
                     leading: Icon(
                       CupertinoIcons.person_fill,
-                      color: isSelected ? const Color(0xFFB73D3D) : Colors.grey,
+                      color: isSelected ? ServiceFormStyles.primaryColor : Colors.grey,
                     ),
                     title: Text('${employee.firstName} ${employee.lastName}'),
                     subtitle: employee.position != null
@@ -530,13 +1094,13 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
                     trailing: isSelected
                         ? const Icon(
                             CupertinoIcons.checkmark_circle_fill,
-                            color: Color(0xFFB73D3D),
+                            color: ServiceFormStyles.primaryColor,
                           )
                         : null,
                     onTap: () {
                       setState(() {
                         _selectedReceivedBy = employee.id;
-                            });
+                      });
                       Navigator.pop(context);
                     },
                   );
@@ -546,306 +1110,6 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           ],
         ),
       ),
-    );
-  }
-
-  // Temel Bilgiler Kartı (Kompakt)
-  Widget _buildBasicInfoCard(
-    List<String> priorities,
-    Map<String, String> priorityDisplayNames,
-    List<String> statuses,
-    Map<String, String> statusDisplayNames,
-    AsyncValue<List<Map<String, dynamic>>> techniciansAsync,
-  ) {
-    return _buildSection(
-      'Temel Bilgiler',
-      CupertinoIcons.doc_text,
-      const Color(0xFF3498DB),
-      [
-        // Servis Başlığı
-        _buildTextField(
-          controller: _titleController,
-          label: 'Servis Başlığı *',
-          hint: 'Örn: Klima bakımı, Elektrik arızası...',
-          icon: CupertinoIcons.textformat,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Başlık gereklidir';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 12),
-        
-        // Açıklama
-        _buildTextField(
-          controller: _descriptionController,
-          label: 'Servis Açıklaması *',
-          hint: 'Servisin detaylarını, yapılması gereken işlemleri açıklayın...',
-          icon: CupertinoIcons.text_alignleft,
-          maxLines: 3,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Açıklama gereklidir';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 12),
-        
-        // Servis Türü, Öncelik ve Durum
-        Row(
-          children: [
-            Expanded(
-              child: _buildServiceTypeDropdown(),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildPriorityDropdown(priorities, priorityDisplayNames),
-            ),
-          ],
-        ),
-        if (widget.id != null) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildDropdown(
-                  label: 'Durum',
-                  value: _selectedStatus,
-                  items: statuses,
-                  displayNames: statusDisplayNames,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedStatus = value!;
-                    });
-                  },
-                  icon: CupertinoIcons.checkmark_circle,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTechnicianSelector(techniciansAsync),
-              ),
-            ],
-          ),
-        ] else ...[
-          const SizedBox(height: 12),
-          _buildTechnicianSelector(techniciansAsync),
-        ],
-        const SizedBox(height: 12),
-        
-        // Lokasyon ve Fiş No
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: _buildTextField(
-                controller: _locationController,
-                label: 'Lokasyon',
-                hint: 'Servis yapılacak adres',
-                icon: CupertinoIcons.location,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTextField(
-                controller: _slipNumberController,
-                label: 'Fiş No',
-                hint: 'Opsiyonel',
-                icon: CupertinoIcons.number,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // Servis Sonucu ve Notlar Kartı (Kompakt)
-  Widget _buildNotesCard() {
-    return _buildSection(
-      'Notlar ve Sonuç',
-      CupertinoIcons.doc_plaintext,
-      const Color(0xFFF39C12),
-      [
-        // Servis Sonucu
-        _buildTextField(
-          controller: _serviceResultController,
-          label: 'Servis Sonucu',
-          hint: 'Servis sonucu veya ön görüş (opsiyonel)',
-          icon: CupertinoIcons.checkmark_seal,
-          maxLines: 2,
-        ),
-        const SizedBox(height: 12),
-        
-        // Şirket İçi Notlar
-        _buildTextField(
-          controller: _notesController,
-          label: 'Şirket İçi Notlar',
-          hint: 'Her satır ayrı bir not olarak kaydedilir',
-          icon: CupertinoIcons.text_alignleft,
-          maxLines: 3,
-        ),
-      ],
-    );
-  }
-
-  // Kullanılan Ürünler Kartı
-  Widget _buildUsedProductsCard() {
-    return _buildSection(
-      'Kullanılan Ürünler',
-      CupertinoIcons.cube_box,
-      const Color(0xFF16A085),
-      [
-        _buildUsedProductsSection(),
-      ],
-    );
-  }
-
-  Widget _buildUsedProductsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Ürünler',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF8E8E93),
-              ),
-            ),
-            CupertinoButton(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              color: const Color(0xFFB73D3D),
-              borderRadius: BorderRadius.circular(8),
-              onPressed: () => _showProductSelectionDialog(),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(CupertinoIcons.add, color: Colors.white, size: 18),
-                  SizedBox(width: 4),
-                  Text(
-                    'Ürün Ekle',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (_usedProducts.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2F2F7),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'Henüz ürün eklenmemiş',
-              style: TextStyle(
-                color: Color(0xFF8E8E93),
-                fontStyle: FontStyle.italic,
-                fontSize: 14,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else
-          ...(_usedProducts.asMap().entries.map((entry) {
-            final index = entry.key;
-            final product = entry.value;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    spreadRadius: 0,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          product['name'] ?? 'Bilinmeyen Ürün',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                            color: Color(0xFF000000),
-                          ),
-                        ),
-                        if (product['description'] != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              product['description'],
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Text(
-                              'Miktar: ${product['quantity']} ${product['unit'] ?? 'adet'}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            if (product['price'] != null && product['price'] > 0) ...[
-                              const SizedBox(width: 12),
-                              Text(
-                                'Fiyat: ${product['price']} TL',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.green[700],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    minSize: 0,
-                    onPressed: () => _removeProduct(index),
-                    child: const Icon(
-                      CupertinoIcons.delete,
-                      color: Color(0xFFB73D3D),
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList()),
-      ],
     );
   }
 
@@ -864,11 +1128,15 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     setState(() {
       _usedProducts.add({
         'id': product['id'],
+        'product_id': product['id'],
         'name': product['name'],
         'description': product['description'],
         'unit': product['unit'] ?? 'adet',
         'quantity': quantity,
         'price': product['price'] ?? 0,
+        'unit_price': product['price'] ?? 0,
+        'tax_rate': 20,
+        'discount_rate': 0,
       });
     });
   }
@@ -879,426 +1147,23 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     });
   }
 
-  // Müşteri Seçici
-  Widget _buildCustomerSelector(AsyncValue<List<dynamic>> customersAsync) {
-    return customersAsync.when(
-      data: (customers) {
-        final selectedCustomer = _selectedCustomerId != null
-            ? customers.firstWhere(
-                (c) => c.id == _selectedCustomerId,
-                orElse: () => null,
-              )
-            : null;
-
-        return GestureDetector(
-          onTap: () => _showCustomerPicker(customers),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2F2F7),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(
-                  CupertinoIcons.person_crop_circle,
-                  color: const Color(0xFFB73D3D),
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Müşteri / Tedarikçi',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF8E8E93),
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        selectedCustomer != null
-                            ? selectedCustomer.name ?? 'İsimsiz Müşteri'
-                            : 'Müşteri veya Tedarikçi seçin...',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: selectedCustomer != null
-                              ? const Color(0xFF000000)
-                              : const Color(0xFF8E8E93),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  CupertinoIcons.chevron_down,
-                  color: const Color(0xFF8E8E93),
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      loading: () => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: const Center(
-          child: CupertinoActivityIndicator(),
-        ),
-      ),
-      error: (error, stack) => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Text('Müşteriler yüklenemedi: $error'),
-      ),
-    );
-  }
-
-  // Teknisyen Seçici
-  Widget _buildTechnicianSelector(AsyncValue<List<Map<String, dynamic>>> techniciansAsync) {
-    return techniciansAsync.when(
-      data: (technicians) {
-        final items = [
-          {'value': '', 'label': 'Atanmamış'},
-          ...technicians.map((t) => {
-            'value': t['id'] as String,
-            'label': '${t['first_name']} ${t['last_name']}',
-          }),
-        ];
-
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFF2F2F7),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: DropdownButtonFormField<String>(
-            value: _selectedTechnicianId ?? '',
-            onChanged: (value) {
-              setState(() {
-                _selectedTechnicianId = value?.isEmpty == true ? null : value;
-              });
-            },
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFF000000),
-              fontSize: 16,
-            ),
-            decoration: InputDecoration(
-              labelText: 'Teknisyen',
-              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF8E8E93),
-                fontSize: 14,
-              ),
-              prefixIcon: const Icon(
-                CupertinoIcons.wrench,
-                color: Color(0xFFB73D3D),
-                size: 20,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
-            items: items.map((item) {
-              return DropdownMenuItem(
-                value: item['value'],
-                child: Text(
-                  item['label']!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF000000),
-                    fontSize: 16,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        );
-      },
-      loading: () => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: const Center(
-          child: CupertinoActivityIndicator(),
-        ),
-      ),
-      error: (error, stack) => Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Text('Teknisyenler yüklenemedi'),
-      ),
-    );
-  }
-
-  // Servis Türü Dropdown
-  Widget _buildServiceTypeDropdown() {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F7),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButtonFormField<String>(
-        value: _selectedServiceType.isEmpty ? null : _selectedServiceType,
-        onChanged: (value) {
-          setState(() {
-            _selectedServiceType = value ?? '';
-          });
-        },
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: const Color(0xFF000000),
-          fontSize: 16,
-        ),
-        decoration: InputDecoration(
-          labelText: 'Servis Türü',
-          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF8E8E93),
-            fontSize: 14,
-          ),
-          prefixIcon: const Icon(
-            CupertinoIcons.tag,
-            color: Color(0xFFB73D3D),
-            size: 20,
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-        hint: Text(
-          'Servis türü seçin...',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF8E8E93),
-            fontSize: 16,
-          ),
-        ),
-        items: _serviceTypes.map((type) {
-          return DropdownMenuItem(
-            value: type['value'],
-            child: Text(
-              type['label']!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF000000),
-                fontSize: 16,
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  // Öncelik Dropdown
-  Widget _buildPriorityDropdown(List<String> priorities, Map<String, String> displayNames) {
-    final priorityColors = {
-      'low': const Color(0xFF27AE60),
-      'medium': const Color(0xFFF39C12),
-      'high': const Color(0xFFE67E22),
-      'urgent': const Color(0xFFE74C3C),
-    };
-
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F7),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButtonFormField<String>(
-        value: _selectedPriority,
-        onChanged: (value) {
-          setState(() {
-            _selectedPriority = value!;
-          });
-        },
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: const Color(0xFF000000),
-          fontSize: 16,
-        ),
-        decoration: InputDecoration(
-          labelText: 'Öncelik',
-          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF8E8E93),
-            fontSize: 14,
-          ),
-          prefixIcon: const Icon(
-            CupertinoIcons.exclamationmark_triangle,
-            color: Color(0xFFB73D3D),
-            size: 20,
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-        items: priorities.map((priority) {
-          return DropdownMenuItem(
-            value: priority,
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: priorityColors[priority] ?? Colors.grey,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  displayNames[priority] ?? priority,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF000000),
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  void _showCustomerPicker(List<dynamic> customers) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Müşteri Seç',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(CupertinoIcons.xmark_circle_fill),
-                      color: Colors.grey,
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              // Customer list
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: customers.length,
-                  itemBuilder: (context, index) {
-                    final customer = customers[index];
-                    final isSelected = customer.id == _selectedCustomerId;
-                    
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: isSelected
-                            ? const Color(0xFFB73D3D)
-                            : const Color(0xFFF2F2F7),
-                        child: Text(
-                          (customer.name ?? '?')[0].toUpperCase(),
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : const Color(0xFF000000),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        customer.name ?? 'İsimsiz Müşteri',
-                        style: TextStyle(
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                      subtitle: customer.email != null
-                          ? Text(
-                              customer.email!,
-                              style: const TextStyle(fontSize: 12),
-                            )
-                          : null,
-                      trailing: isSelected
-                          ? const Icon(
-                              CupertinoIcons.checkmark_circle_fill,
-                              color: Color(0xFFB73D3D),
-                            )
-                          : null,
-                      onTap: () {
-                        setState(() {
-                          _selectedCustomerId = customer.id;
-                          _selectedSupplierId = null;
-                          
-                          // İletişim bilgilerini otomatik doldur
-                          if (customer.name != null) {
-                            _contactPersonController.text = customer.name!;
-                          }
-                          if (customer.phone != null) {
-                            _contactPhoneController.text = customer.phone!;
-                          }
-                          if (customer.email != null) {
-                            _contactEmailController.text = customer.email!;
-                          }
-                          if (customer.address != null) {
-                            _locationController.text = customer.address!;
-                          }
-                        });
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<void> _selectDueDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 7)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: ServiceFormStyles.primaryColor,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -1313,6 +1178,17 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _dueTime ?? TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: ServiceFormStyles.primaryColor,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -1327,6 +1203,17 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
       initialDate: _reportedDate,
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now().add(const Duration(days: 1)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: ServiceFormStyles.primaryColor,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -1341,24 +1228,21 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
       initialDate: _serviceStartDate ?? DateTime.now(),
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: ServiceFormStyles.primaryColor,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
         _serviceStartDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectServiceStartTime() async {
-    if (_serviceStartDate == null) return;
-    
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _serviceStartTime ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _serviceStartTime = picked;
       });
     }
   }
@@ -1369,24 +1253,21 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
       initialDate: _serviceEndDate ?? DateTime.now(),
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: ServiceFormStyles.primaryColor,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
         _serviceEndDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectServiceEndTime() async {
-    if (_serviceEndDate == null) return;
-    
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _serviceEndTime ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _serviceEndTime = picked;
       });
     }
   }
@@ -1403,7 +1284,6 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
     try {
       final service = ref.read(serviceRequestServiceProvider);
 
-      // Due date ve time'ı birleştir
       DateTime? finalDueDate = _dueDate;
       if (_dueDate != null && _dueTime != null) {
         finalDueDate = DateTime(
@@ -1415,7 +1295,6 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         );
       }
 
-      // Servis başlama tarihi ve saati birleştir
       DateTime? finalServiceStartDate = _serviceStartDate;
       if (_serviceStartDate != null && _serviceStartTime != null) {
         finalServiceStartDate = DateTime(
@@ -1427,7 +1306,6 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         );
       }
 
-      // Servis bitirme tarihi ve saati birleştir
       DateTime? finalServiceEndDate = _serviceEndDate;
       if (_serviceEndDate != null && _serviceEndTime != null) {
         finalServiceEndDate = DateTime(
@@ -1439,15 +1317,17 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         );
       }
 
-      // Mevcut kullanıcı ID'sini al
       final authService = AuthService();
       final currentUserInfo = await authService.getCurrentUserEmployeeInfo();
       final currentUserId = currentUserInfo?['id'];
 
       if (widget.id == null) {
-        // Yeni oluşturma
+        final serviceNumber = _serviceNumberController.text.trim().isEmpty 
+            ? null 
+            : _serviceNumberController.text.trim();
+        
         final serviceRequest = ServiceRequest(
-          id: '', // Supabase otomatik oluşturacak
+          id: '',
           title: _titleController.text,
           description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
           serviceType: _selectedServiceType.isEmpty ? null : _selectedServiceType,
@@ -1473,24 +1353,32 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
           createdBy: currentUserId,
-          serviceDetails: _usedProducts.isNotEmpty 
-              ? {'used_products': _usedProducts}
-              : null,
+          serviceDetails: null,
+          serviceNumber: serviceNumber,
         );
 
-        await service.createServiceRequest(serviceRequest);
+        final createdRequest = await service.createServiceRequest(serviceRequest);
+        
+        if (_usedProducts.isNotEmpty) {
+          await service.addServiceItems(createdRequest.id, _usedProducts);
+        }
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Servis talebi başarıyla oluşturuldu')),
+            SnackBar(
+              content: Text(
+                createdRequest.serviceNumber != null
+                    ? 'Servis talebi başarıyla oluşturuldu: ${createdRequest.serviceNumber}'
+                    : 'Servis talebi başarıyla oluşturuldu',
+              ),
+              duration: const Duration(seconds: 3),
+            ),
           );
           context.go('/service/management');
         }
       } else {
-        // Düzenleme - mevcut servis talebini al
         final existingRequest = await ref.read(serviceRequestByIdProvider(widget.id!).future);
         
-        // Düzenleme
         final serviceRequest = ServiceRequest(
           id: widget.id!,
           title: _titleController.text,
@@ -1518,15 +1406,15 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
           createdAt: existingRequest?.createdAt ?? DateTime.now(),
           updatedAt: DateTime.now(),
           createdBy: existingRequest?.createdBy ?? currentUserId,
-          serviceDetails: _usedProducts.isNotEmpty 
-              ? {
-                  ...?existingRequest?.serviceDetails,
-                  'used_products': _usedProducts,
-                }
-              : existingRequest?.serviceDetails,
+          serviceDetails: null,
         );
         
         await service.updateServiceRequest(widget.id!, serviceRequest);
+        
+        await service.deleteAllServiceItems(widget.id!);
+        if (_usedProducts.isNotEmpty) {
+          await service.addServiceItems(widget.id!, _usedProducts);
+        }
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1536,7 +1424,6 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
         }
       }
 
-      // Provider'ları yenile
       ref.invalidate(serviceRequestsProvider);
       if (widget.id != null) {
         ref.invalidate(serviceRequestByIdProvider(widget.id!));
@@ -1555,296 +1442,8 @@ class _ServiceRequestFormPageState extends ConsumerState<ServiceRequestFormPage>
       }
     }
   }
-
-  Widget _buildSection(String title, IconData sectionIcon, Color iconColor, List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            spreadRadius: 0,
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    sectionIcon,
-                    color: iconColor,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF000000),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-    TextInputType? keyboardType,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F7),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        validator: validator,
-        keyboardType: keyboardType,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: const Color(0xFF000000),
-          fontSize: 16,
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF8E8E93),
-            fontSize: 14,
-          ),
-          hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF8E8E93),
-            fontSize: 14,
-          ),
-          prefixIcon: Icon(
-            icon,
-            color: const Color(0xFFB73D3D),
-            size: 20,
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required Map<String, String> displayNames,
-    required void Function(String?) onChanged,
-    required IconData icon,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F7),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButtonFormField<String>(
-        value: value,
-        onChanged: onChanged,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: const Color(0xFF000000),
-          fontSize: 16,
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF8E8E93),
-            fontSize: 14,
-          ),
-          prefixIcon: Icon(
-            icon,
-            color: const Color(0xFFB73D3D),
-            size: 20,
-          ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-        items: items.map((item) {
-          return DropdownMenuItem(
-            value: item,
-            child: Text(
-              displayNames[item] ?? item,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF000000),
-                fontSize: 16,
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildDateSelector({
-    required String label,
-    required DateTime? date,
-    required VoidCallback onTap,
-    required IconData icon,
-    bool isOptional = false,
-  }) {
-    return CupertinoButton(
-      onPressed: onTap,
-      padding: EdgeInsets.zero,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF8E8E93),
-              fontSize: 14,
-            ),
-            prefixIcon: Icon(
-              icon,
-              color: const Color(0xFFB73D3D),
-              size: 20,
-            ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-          ),
-          child: Text(
-            date != null
-                ? '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}'
-                : isOptional ? 'Opsiyonel' : 'Tarih seçin',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: date != null ? const Color(0xFF000000) : const Color(0xFF8E8E93),
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimeSelector({
-    required String label,
-    required TimeOfDay? time,
-    required VoidCallback onTap,
-    required IconData icon,
-    bool enabled = true,
-  }) {
-    return CupertinoButton(
-      onPressed: enabled ? onTap : null,
-      padding: EdgeInsets.zero,
-      child: Opacity(
-        opacity: enabled ? 1.0 : 0.5,
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFF2F2F7),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: InputDecorator(
-            decoration: InputDecoration(
-              labelText: label,
-              labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF8E8E93),
-                fontSize: 14,
-              ),
-              prefixIcon: Icon(
-                icon,
-                color: const Color(0xFFB73D3D),
-                size: 20,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
-            child: Text(
-              time != null
-                  ? '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'
-                  : 'Saat seçin',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: time != null ? const Color(0xFF000000) : const Color(0xFF8E8E93),
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSaveButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: CupertinoButton(
-        onPressed: _isLoading ? null : _saveServiceRequest,
-        color: const Color(0xFFB73D3D),
-        borderRadius: BorderRadius.circular(16),
-        child: _isLoading
-            ? const CupertinoActivityIndicator(
-                color: Colors.white,
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    widget.id == null ? CupertinoIcons.add_circled : CupertinoIcons.check_mark_circled,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    widget.id == null ? 'Servis Talebini Oluştur' : 'Değişiklikleri Kaydet',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
 }
 
-// Ürün Seçim Dialog'u (servis fişi sayfasındaki ile aynı)
 class _ProductSelectionDialog extends ConsumerStatefulWidget {
   final Function(Map<String, dynamic>, double) onProductSelected;
 
@@ -1893,23 +1492,31 @@ class _ProductSelectionDialogState extends ConsumerState<_ProductSelectionDialog
     final productsAsync = ref.watch(productsProvider);
     
     return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ServiceFormStyles.cardRadius),
+      ),
       child: Container(
-        height: 600,
-        width: 400,
+        height: 550,
+        width: 380,
         child: Column(
           children: [
-            // Header
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFB73D3D),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [ServiceFormStyles.primaryGradientStart, ServiceFormStyles.primaryGradientEnd],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(ServiceFormStyles.cardRadius),
+                  topRight: Radius.circular(ServiceFormStyles.cardRadius),
                 ),
               ),
               child: Row(
                 children: [
+                  const Icon(CupertinoIcons.cube_box, color: Colors.white, size: 22),
+                  const SizedBox(width: 10),
                   const Expanded(
                     child: Text(
                       'Ürün Seç',
@@ -1920,58 +1527,27 @@ class _ProductSelectionDialogState extends ConsumerState<_ProductSelectionDialog
                       ),
                     ),
                   ),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    minSize: 0,
-                    onPressed: () => Navigator.pop(context),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
                     child: const Icon(
                       CupertinoIcons.xmark_circle_fill,
                       color: Colors.white,
-                      size: 24,
+                      size: 26,
                     ),
                   ),
                 ],
               ),
             ),
             
-            // Search
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    labelText: 'Ürün ara...',
-                    labelStyle: TextStyle(
-                      color: Colors.grey[600],
-                    ),
-                    prefixIcon: const Icon(
-                      CupertinoIcons.search,
-                      color: Color(0xFFB73D3D),
-                      size: 20,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
+              child: ServiceFormTextField(
+                controller: _searchController,
+                label: 'Ürün ara...',
+                icon: CupertinoIcons.search,
               ),
             ),
             
-            // Product List
             Expanded(
               child: productsAsync.when(
                 data: (products) {
@@ -1984,8 +1560,8 @@ class _ProductSelectionDialogState extends ConsumerState<_ProductSelectionDialog
                       child: Text(
                         'Ürün bulunamadı',
                         style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
+                          color: ServiceFormStyles.textSecondary,
+                          fontSize: ServiceFormStyles.bodySize,
                         ),
                       ),
                     );
@@ -1998,168 +1574,160 @@ class _ProductSelectionDialogState extends ConsumerState<_ProductSelectionDialog
                       final product = _filteredProducts[index];
                       final isSelected = _selectedProduct?.id == product.id;
                       
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFFB73D3D).withValues(alpha: 0.1) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: isSelected
-                              ? Border.all(color: const Color(0xFFB73D3D), width: 2)
-                              : Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          title: Text(
-                            product.name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: isSelected ? const Color(0xFFB73D3D) : const Color(0xFF000000),
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedProduct = product;
+                          });
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                              ? ServiceFormStyles.primaryColor.withOpacity(0.1) 
+                              : Colors.white,
+                            borderRadius: BorderRadius.circular(ServiceFormStyles.inputRadius),
+                            border: Border.all(
+                              color: isSelected 
+                                ? ServiceFormStyles.primaryColor 
+                                : Colors.grey.shade200,
+                              width: isSelected ? 2 : 1,
                             ),
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (product.description != null && product.description!.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    product.description!,
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 13,
-                                    ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: (isSelected 
+                                      ? ServiceFormStyles.primaryColor 
+                                      : ServiceFormStyles.successColor).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    CupertinoIcons.cube_box,
+                                    color: isSelected 
+                                      ? ServiceFormStyles.primaryColor 
+                                      : ServiceFormStyles.successColor,
+                                    size: 20,
                                   ),
                                 ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'Fiyat: ${product.price} TL',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.grey[700],
-                                    fontSize: 13,
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        product.name,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: ServiceFormStyles.titleSize,
+                                          color: isSelected 
+                                            ? ServiceFormStyles.primaryColor 
+                                            : ServiceFormStyles.textPrimary,
+                                        ),
+                                      ),
+                                      if (product.description != null && product.description!.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2),
+                                          child: Text(
+                                            product.description!,
+                                            style: const TextStyle(
+                                              color: ServiceFormStyles.textSecondary,
+                                              fontSize: ServiceFormStyles.captionSize,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          '${product.price} ₺',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: ServiceFormStyles.successColor,
+                                            fontSize: ServiceFormStyles.labelSize,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
+                                if (isSelected)
+                                  const Icon(
+                                    CupertinoIcons.checkmark_circle_fill,
+                                    color: ServiceFormStyles.primaryColor,
+                                    size: 24,
+                                  ),
+                              ],
+                            ),
                           ),
-                          trailing: isSelected
-                              ? const Icon(
-                                  CupertinoIcons.checkmark_circle_fill,
-                                  color: Color(0xFFB73D3D),
-                                  size: 24,
-                                )
-                              : null,
-                          onTap: () {
-                            setState(() {
-                              _selectedProduct = product;
-                            });
-                          },
                         ),
                       );
                     },
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CupertinoActivityIndicator()),
                 error: (error, stack) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Ürünler yüklenemedi',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        error.toString(),
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                  child: Text(
+                    'Ürünler yüklenemedi',
+                    style: TextStyle(color: Colors.grey[600]),
                   ),
                 ),
               ),
             ),
             
-            // Quantity and Add Button
             if (_selectedProduct != null)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F2F7),
+                  color: ServiceFormStyles.inputBackground,
                   border: Border(top: BorderSide(color: Colors.grey.shade200)),
                 ),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: _quantityController,
-                          decoration: InputDecoration(
-                            labelText: 'Miktar (${_selectedProduct!.unit ?? 'adet'})',
-                            labelStyle: TextStyle(
-                              color: Colors.grey[600],
-                            ),
-                            prefixIcon: const Icon(
-                              CupertinoIcons.number,
-                              color: Color(0xFFB73D3D),
-                              size: 20,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
+                      child: ServiceFormTextField(
+                        controller: _quantityController,
+                        label: 'Miktar (${_selectedProduct!.unit ?? 'adet'})',
+                        icon: CupertinoIcons.number,
+                        keyboardType: TextInputType.number,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    SizedBox(
-                      height: 50,
-                      child: CupertinoButton(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        color: const Color(0xFFB73D3D),
-                        borderRadius: BorderRadius.circular(12),
-                        onPressed: () {
-                          final quantity = double.tryParse(_quantityController.text) ?? 1;
-                          widget.onProductSelected({
-                            'id': _selectedProduct!.id,
-                            'name': _selectedProduct!.name,
-                            'description': _selectedProduct!.description,
-                            'unit': _selectedProduct!.unit,
-                            'price': _selectedProduct!.price,
-                          }, quantity);
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          'Ekle',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    const SizedBox(width: 12),
+                    CupertinoButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      color: ServiceFormStyles.primaryColor,
+                      borderRadius: BorderRadius.circular(ServiceFormStyles.buttonRadius),
+                      onPressed: () {
+                        final quantity = double.tryParse(_quantityController.text) ?? 1;
+                        widget.onProductSelected({
+                          'id': _selectedProduct!.id,
+                          'name': _selectedProduct!.name,
+                          'description': _selectedProduct!.description,
+                          'unit': _selectedProduct!.unit,
+                          'price': _selectedProduct!.price,
+                        }, quantity);
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Ekle',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: ServiceFormStyles.titleSize,
                         ),
                       ),
                     ),
                   ],
-                    ),
-                  ),
-                ],
+                ),
               ),
+          ],
+        ),
       ),
     );
   }

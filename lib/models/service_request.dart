@@ -10,7 +10,6 @@ class ServiceRequest {
   final DateTime? dueDate;
   final String? location;
   final String? serviceType;
-  final String? equipmentId;
   final Map<String, dynamic>? warrantyInfo;
   final List<dynamic> attachments;
   final List<String>? notes;
@@ -54,7 +53,6 @@ class ServiceRequest {
     this.dueDate,
     this.location,
     this.serviceType,
-    this.equipmentId,
     this.warrantyInfo,
     this.attachments = const [],
     this.notes,
@@ -100,7 +98,6 @@ class ServiceRequest {
       dueDate: _parseDateTime(json['service_due_date'] ?? json['due_date']),
       location: json['service_location']?.toString() ?? json['location']?.toString(),
       serviceType: json['service_type']?.toString(),
-      equipmentId: json['equipment_id']?.toString(),
       warrantyInfo: json['warranty_info'] != null 
           ? Map<String, dynamic>.from(json['warranty_info']) 
           : null,
@@ -200,7 +197,6 @@ class ServiceRequest {
       'service_due_date': dueDate?.toIso8601String(),
       'service_location': location,
       'service_type': serviceType,
-      'equipment_id': equipmentId,
       'warranty_info': warrantyInfo,
       'attachments': attachments,
       'notes': notes,
@@ -245,7 +241,6 @@ class ServiceRequest {
     DateTime? dueDate,
     String? location,
     String? serviceType,
-    String? equipmentId,
     Map<String, dynamic>? warrantyInfo,
     List<dynamic>? attachments,
     List<String>? notes,
@@ -288,7 +283,6 @@ class ServiceRequest {
       dueDate: dueDate ?? this.dueDate,
       location: location ?? this.location,
       serviceType: serviceType ?? this.serviceType,
-      equipmentId: equipmentId ?? this.equipmentId,
       warrantyInfo: warrantyInfo ?? this.warrantyInfo,
       attachments: attachments ?? this.attachments,
       notes: notes ?? this.notes,

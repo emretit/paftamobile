@@ -55,12 +55,13 @@ class DashboardService {
           .from('approvals')
           .select('*')
           .eq('approver_id', approverId ?? _supabase.auth.currentUser!.id)
-          .eq('status', 'pending')
-          .order('created_at', ascending: false);
+          .eq('status', 'pending');
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query.order('created_at', ascending: false);
 
       final response = await query;
       return (response as List).map((json) => Approval.fromJson(json)).toList();
@@ -80,13 +81,15 @@ class DashboardService {
       dynamic query = _supabase
           .from('notifications')
           .select('*')
-          .eq('user_id', userId ?? _supabase.auth.currentUser!.id)
-          .order('created_at', ascending: false)
-          .limit(limit);
+          .eq('user_id', userId ?? _supabase.auth.currentUser!.id);
 
       if (companyId != null) {
         query = query.eq('company_id', companyId);
       }
+
+      query = query
+          .order('created_at', ascending: false)
+          .limit(limit);
 
       final response = await query;
       return (response as List)
